@@ -20,9 +20,10 @@
         </div>
 
         <div class="nav-actions">
-            <a href="/accounts/new" class="nav-link">Create Account</a>
-            <a href="/transactions/deposit" class="nav-link">Deposit</a>
-            <a href="/transactions/withdraw" class="nav-link">Withdraw</a>
+            {% if role == "customer" %}
+                <a href="/transactions/deposit" class="nav-link">Deposit</a>
+                <a href="/transactions/withdraw" class="nav-link">Withdraw</a>
+            {% endif %}
             <a href="/logout" class="logout-btn">Logout</a>
         </div>
 
@@ -35,15 +36,9 @@
         <div class="page-header">
             <div>
                 <h1>Account Dashboard</h1>
-                <p>Manage your bank accounts</p>
+                <p>{{ "Manage customer accounts" if role == "admin" else "Manage your account" }}</p>
             </div>
 
-            <div class="header-actions">
-                <a href="/accounts/new" class="btn secondary">Create Account Page</a>
-                <button type="button" class="btn primary" onclick="openAddModal()">
-                    + Add Account
-                </button>
-            </div>
         </div>
 
 
@@ -110,7 +105,7 @@
                         <tr>
                             <th>#</th>
                             <th>Account Holder</th>
-                            <th>PIN</th>
+                            {% if role == "admin" %}<th>Security</th>{% endif %}
                             <th>Balance</th>
                             <th>Actions</th>
                         </tr>
@@ -134,49 +129,22 @@
                                 </div>
                             </td>
 
-                            <td>
-                                <span class="pin-value">
-                                    {{ account[1] }}
-                                </span>
-                            </td>
+                            {% if role == "admin" %}<td><span class="pin-value">Protected</span></td>{% endif %}
 
                             <td>
-                                <strong class="balance">
-                                    ₹{{ "%.2f"|format(account[2]) }}
-                                </strong>
+                                <strong class="balance">₹{{ "%.2f"|format(account[2]) }}</strong>
                             </td>
 
                             <td>
 
-                                <div class="action-buttons">
-
-                                    <button
-                                        class="action-btn edit"
-                                        onclick="openEditModal(
-                                            '{{ account[0] }}',
-                                            '{{ account[1] }}',
-                                            '{{ account[2] }}'
-                                        )"
-                                    >
-                                        Edit
-                                    </button>
-
-                                    <button
-                                        class="action-btn delete"
-                                        onclick="confirmDelete('{{ account[0] }}')"
-                                    >
-                                        Delete
-                                    </button>
-
-                                    <a href="/transactions/deposit" class="action-btn deposit">
-                                        Deposit
-                                    </a>
-
-                                    <a href="/transactions/withdraw" class="action-btn withdraw">
-                                        Withdraw
-                                    </a>
-
-                                </div>
+                                {% if role == "admin" %}
+                                    <span class="pin-value">View only</span>
+                                {% else %}
+                                    <div class="action-buttons">
+                                        <a href="/transactions/deposit" class="action-btn deposit">Deposit</a>
+                                        <a href="/transactions/withdraw" class="action-btn withdraw">Withdraw</a>
+                                    </div>
+                                {% endif %}
 
                             </td>
 
@@ -200,12 +168,6 @@
 
                 <p>Start by adding your first bank account.</p>
 
-                <button
-                    class="btn primary"
-                    onclick="openAddModal()"
-                >
-                    + Add Account
-                </button>
 
             </div>
 
@@ -216,6 +178,7 @@
     </main>
 
 
+    {% if false %}
     <!-- ADD ACCOUNT MODAL -->
     <div id="addModal" class="modal">
 
@@ -299,7 +262,6 @@
         </div>
 
     </div>
-
 
     <!-- EDIT ACCOUNT MODAL -->
     <div id="editModal" class="modal">
@@ -427,6 +389,9 @@
         </div>
 
     </div>
+
+
+    {% endif %}
 
 
     <script src="{{ url_for('static', path='script.js') }}"></script>

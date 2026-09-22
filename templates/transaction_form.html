@@ -26,10 +26,7 @@
             {% endif %}
 
             <form action="{{ action }}" method="POST">
-                <div class="form-group">
-                    <label for="holder">Account Holder</label>
-                    <input id="holder" type="text" name="holder" placeholder="Enter exact account holder name" required>
-                </div>
+                <p class="form-intro">Account: <strong>{{ request.session.holder }}</strong></p>
                 <div class="form-group">
                     <label for="amount">Amount</label>
                     <input id="amount" type="number" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
