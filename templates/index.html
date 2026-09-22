@@ -20,7 +20,9 @@
         </div>
 
         <div class="nav-actions">
-            {% if role == "customer" %}
+            {% if role == "admin" %}
+                <a href="/accounts/new" class="nav-link">Create Customer</a>
+            {% else %}
                 <a href="/transactions/deposit" class="nav-link">Deposit</a>
                 <a href="/transactions/withdraw" class="nav-link">Withdraw</a>
             {% endif %}
@@ -138,7 +140,7 @@
                             <td>
 
                                 {% if role == "admin" %}
-                                    <span class="pin-value">View only</span>
+                                    <a href="/delete/{{ account[0] }}" class="action-btn delete" onclick="return confirm('Delete this customer account?')">Delete</a>
                                 {% else %}
                                     <div class="action-buttons">
                                         <a href="/transactions/deposit" class="action-btn deposit">Deposit</a>

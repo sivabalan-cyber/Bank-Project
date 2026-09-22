@@ -154,48 +154,6 @@ def login(
     return RedirectResponse("/", status_code=303)
 
 
-@app.post("/customer/register")
-def register_customer(
-    holder: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...)
-):
-    holder = holder.strip()
-
-    if len(holder) < 2 or len(password) < 4:
-        return RedirectResponse(
-            "/login?type=customer&register_error=Name%20and%20password%20must%20be%20valid",
-            status_code=303
-        )
-
-    if password != confirm_password:
-        return RedirectResponse(
-            "/login?type=customer&register_error=Passwords%20do%20not%20match",
-            status_code=303
-        )
-
-    cursor.execute(
-        "SELECT account_holder FROM accounts WHERE account_holder=%s",
-        (holder,)
-    )
-    if cursor.fetchone():
-        return RedirectResponse(
-            "/login?type=customer&register_error=Account%20already%20exists",
-            status_code=303
-        )
-
-    cursor.execute(
-        "INSERT INTO accounts (account_holder, pin, balance) VALUES (%s, %s, %s)",
-        (holder, hash_password(password), 0)
-    )
-    conn.commit()
-
-    return RedirectResponse(
-        "/login?type=customer&registered=1",
-        status_code=303
-    )
-
-
 @app.get("/logout")
 def logout(request: Request):
     request.session.clear()
@@ -210,7 +168,11 @@ def logout(request: Request):
 def new_account_page(request: Request):
     if (response := require_admin(request)):
         return response
-    return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="account_form.html",
+        context={"error": request.query_params.get("error")}
+    )
 
 
 @app.get("/transactions/deposit")
@@ -260,7 +222,6 @@ def add_account(
 ):
     if (response := require_admin(request)):
         return response
-    return RedirectResponse("/", status_code=303)
 
     cursor.execute(
         "SELECT * FROM accounts WHERE account_holder=%s",
@@ -358,7 +319,6 @@ def update_account(
 ):
     if (response := require_admin(request)):
         return response
-    return RedirectResponse("/", status_code=303)
 
     cursor.execute(
         """
@@ -386,7 +346,6 @@ def update_account(
 def delete_account(request: Request, holder: str):
     if (response := require_admin(request)):
         return response
-    return RedirectResponse("/", status_code=303)
 
     cursor.execute(
         "DELETE FROM accounts WHERE account_holder=%s",
