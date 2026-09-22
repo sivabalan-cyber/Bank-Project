@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Banking System - Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+
+        <div class="nav-brand">
+            <div class="brand-icon small">₿</div>
+            <span>Banking System</span>
+        </div>
+
+        <div class="nav-actions">
+            <a href="/accounts/new" class="nav-link">Create Account</a>
+            <a href="/transactions/deposit" class="nav-link">Deposit</a>
+            <a href="/transactions/withdraw" class="nav-link">Withdraw</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+
+    </nav>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard">
+
+        <div class="page-header">
+            <div>
+                <h1>Account Dashboard</h1>
+                <p>Manage your bank accounts</p>
+            </div>
+
+            <div class="header-actions">
+                <a href="/accounts/new" class="btn secondary">Create Account Page</a>
+                <button type="button" class="btn primary" onclick="openAddModal()">
+                    + Add Account
+                </button>
+            </div>
+        </div>
+
+
+        <!-- STATISTICS -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon blue">👤</div>
+
+                <div>
+                    <p>Total Accounts</p>
+                    <h2>{{ accounts|length }}</h2>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">₹</div>
+
+                <div>
+                    <p>Total Balance</p>
+
+                    <h2>
+                        ₹
+                        {% set total = namespace(value=0) %}
+
+                        {% for account in accounts %}
+                            {% set total.value = total.value + account[2] %}
+                        {% endfor %}
+
+                        {{ "%.2f"|format(total.value) }}
+                    </h2>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ACCOUNTS TABLE -->
+        <section class="table-card">
+
+            <div class="table-header">
+                <div>
+                    <h2>Accounts</h2>
+                    <p>All registered customer accounts</p>
+                </div>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-box"
+                    placeholder="Search account..."
+                    onkeyup="searchAccounts()"
+                >
+            </div>
+
+
+            {% if accounts %}
+
+            <div class="table-wrapper">
+
+                <table id="accountsTable">
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Account Holder</th>
+                            <th>PIN</th>
+                            <th>Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for account in accounts %}
+
+                        <tr>
+
+                            <td>{{ loop.index }}</td>
+
+                            <td>
+                                <div class="holder">
+                                    <div class="avatar">
+                                        {{ account[0][0]|upper }}
+                                    </div>
+
+                                    <span>{{ account[0] }}</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="pin-value">
+                                    {{ account[1] }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong class="balance">
+                                    ₹{{ "%.2f"|format(account[2]) }}
+                                </strong>
+                            </td>
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <button
+                                        class="action-btn edit"
+                                        onclick="openEditModal(
+                                            '{{ account[0] }}',
+                                            '{{ account[1] }}',
+                                            '{{ account[2] }}'
+                                        )"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="action-btn delete"
+                                        onclick="confirmDelete('{{ account[0] }}')"
+                                    >
+                                        Delete
+                                    </button>
+
+                                    <a href="/transactions/deposit" class="action-btn deposit">
+                                        Deposit
+                                    </a>
+
+                                    <a href="/transactions/withdraw" class="action-btn withdraw">
+                                        Withdraw
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-icon">🏦</div>
+
+                <h3>No Accounts Found</h3>
+
+                <p>Start by adding your first bank account.</p>
+
+                <button
+                    class="btn primary"
+                    onclick="openAddModal()"
+                >
+                    + Add Account
+                </button>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+
+    <!-- ADD ACCOUNT MODAL -->
+    <div id="addModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div>
+                    <h2>Add Account</h2>
+                    <p>Create a new bank account</p>
+                </div>
+
+                <button
+                    class="close-btn"
+                    onclick="closeAddModal()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form action="/add" method="POST">
+
+                <div class="form-group">
+                    <label>Account Holder</label>
+
+                    <input
+                        type="text"
+                        name="holder"
+                        placeholder="Enter account holder name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>PIN</label>
+
+                    <input
+                        type="password"
+                        name="pin"
+                        placeholder="Enter PIN"
+                        minlength="4"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Initial Balance</label>
+
+                    <input
+                        type="number"
+                        name="balance"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn secondary"
+                        onclick="closeAddModal()"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn primary"
+                    >
+                        Create Account
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- EDIT ACCOUNT MODAL -->
+    <div id="editModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div>
+                    <h2>Edit Account</h2>
+                    <p>Update account information</p>
+                </div>
+
+                <button
+                    class="close-btn"
+                    onclick="closeEditModal()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form action="/update" method="POST">
+
+                <div class="form-group">
+                    <label>Account Holder</label>
+
+                    <input
+                        type="text"
+                        id="editHolder"
+                        name="holder"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>PIN</label>
+
+                    <input
+                        type="password"
+                        id="editPin"
+                        name="pin"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Balance</label>
+
+                    <input
+                        type="number"
+                        id="editBalance"
+                        name="balance"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn secondary"
+                        onclick="closeEditModal()"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn primary"
+                    >
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- DELETE CONFIRMATION -->
+    <div id="deleteModal" class="modal">
+
+        <div class="modal-content delete-modal">
+
+            <div class="delete-icon">
+                ⚠
+            </div>
+
+            <h2>Delete Account?</h2>
+
+            <p>
+                Are you sure you want to delete
+                <strong id="deleteHolder"></strong>?
+            </p>
+
+            <p class="warning-text">
+                This action cannot be undone.
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                    class="btn secondary"
+                    onclick="closeDeleteModal()"
+                >
+                    Cancel
+                </button>
+
+                <a
+                    id="deleteLink"
+                    href="#"
+                    class="btn danger"
+                >
+                    Delete Account
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="{{ url_for('static', path='script.js') }}"></script>
+
+</body>
+</html>
